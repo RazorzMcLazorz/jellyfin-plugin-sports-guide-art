@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require tag on production
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/production
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test -c Release
+
+      - name: Build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}.0"
+          echo "PLUGIN_VERSION=$VERSION" >> "$GITHUB_ENV"
+          dotnet publish src/Jellyfin.Plugin.SportsGuideArt -c Release -o artifacts/publish \
+            -p:Version=$VERSION -p:AssemblyVersion=$VERSION -p:FileVersion=$VERSION
+          mkdir -p artifacts/zip
+          cp artifacts/publish/Jellyfin.Plugin.SportsGuideArt.dll artifacts/zip/
+          ZIP="sports-guide-art_${VERSION}.zip"
+          (cd artifacts/zip && zip -q "../$ZIP" *)
+          echo "PLUGIN_ZIP=artifacts/$ZIP" >> "$GITHUB_ENV"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="releases/${GITHUB_REF_NAME#v}.md"
+          if [ -f "$NOTES" ]; then
+            gh release create "$GITHUB_REF_NAME" "$PLUGIN_ZIP" --title "$GITHUB_REF_NAME" --notes-file "$NOTES"
+          else
+            gh release create "$GITHUB_REF_NAME" "$PLUGIN_ZIP" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+
+      - name: Update plugin repository manifest (gh-pages)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            git fetch origin gh-pages
+            git show origin/gh-pages:manifest.json > /tmp/manifest.json
+          else
+            echo '[]' > /tmp/manifest.json
+          fi
+          python3 scripts/update_manifest.py /tmp/manifest.json "$PLUGIN_ZIP" "$PLUGIN_VERSION" \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/$(basename "$PLUGIN_ZIP")" \
+            "releases/${GITHUB_REF_NAME#v}.md"
+          git worktree add --detach /tmp/pages
+          cd /tmp/pages
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            git checkout -q -B gh-pages origin/gh-pages
+          else
+            git checkout -q --orphan gh-pages && git rm -rqf . || true
+          fi
+          cp /tmp/manifest.json manifest.json
+          git add manifest.json
+          git commit -qm "Publish ${GITHUB_REF_NAME} to plugin manifest"
+          git push -q origin gh-pages
