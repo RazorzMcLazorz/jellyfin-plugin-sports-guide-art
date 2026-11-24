@@ -15,13 +15,13 @@ TARGET_ABI = "12.4.0.0"
 PLUGIN = {
     "guid": GUID,
     "name": "Sports Guide Art",
-    "overview": "Fills missing Live TV guide art for sports",
+    "overview": "Gives every Live TV sports program artwork",
     "description": (
-        "Fills Live TV programs that have no art. It copies art from the same game on the same channel "
-        "(so 'Upcoming:', 'Pregame:' and 'Postgame:' slots get the game's poster), then from the same title "
-        "on any channel, then from art remembered from earlier guide refreshes, and finally generates a "
-        "matchup image with team logos from ESPN or TheSportsDB. Every image is cached locally."
+        "Gives every Live TV sports program artwork. "
+        "Game posters on every slot \u00b7 Matchup images with ESPN or TheSportsDB logos \u00b7 "
+        "Re-applied after every guide refresh \u00b7 Cached locally"
     ),
+    "imageUrl": "https://raw.githubusercontent.com/RazorzMcLazorz/jellyfin-plugin-sports-guide-art/production/assets/logo.png",
     "owner": "RazorzMcLazorz",
     "category": "Live TV",
     "versions": [],

@@ -35,7 +35,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override Guid Id => PluginId;
 
     /// <inheritdoc />
-    public override string Description => "Fills missing Live TV guide art from matching programs or generated matchup images.";
+    public override string Description => "Gives every Live TV sports program artwork.";
 
     /// <summary>Gets the current plugin instance.</summary>
     public static Plugin? Instance { get; private set; }
