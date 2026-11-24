@@ -1,5 +1,7 @@
 # Sports Guide Art
 
+![Sports Guide Art](assets/logo.png)
+
 A Jellyfin plugin that fills missing Live TV guide art for sports programs.
 
 Many IPTV guides only attach a poster to the game itself. The slots around it, such as `Upcoming: Anaheim Ducks vs Utah Mammoth`, `Pregame: …` and `Postgame: …`, have no art, so most Live TV cards are blank for most of the day. This plugin finds those programs and gives them art.
